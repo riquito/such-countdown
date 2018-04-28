@@ -8,8 +8,9 @@
     "prop-types": "^15.6.1",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
-    "such-countdown": "link:..",
-    "react-scripts": "^1.1.1"
+    "react-scripts": "^1.1.1",
+    "styled-components": "^3.2.6",
+    "such-countdown": "link:.."
   },
   "scripts": {
     "start": "react-scripts start",

@@ -1,7 +1,7 @@
-import ExampleComponent from './'
+import SuchCountDown from './'
 
-describe('ExampleComponent', () => {
+describe('SuchCountDown', () => {
   it('is truthy', () => {
-    expect(ExampleComponent).toBeTruthy()
+    expect(SuchCountDown).toBeTruthy()
   })
 })
