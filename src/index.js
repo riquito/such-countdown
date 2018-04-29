@@ -16,13 +16,16 @@ class SuchCountdown extends Component {
             fontSize: props.getFontSize(props.sideLength)
         }
 
-        this.startedAt = 0
-        this.updatedAt = 0
-        this.lastTextUpdate = 0
-        this.animationTimestamp = null
+        this.resetInternalCounters()
+    }
+    resetInternalCounters = () => {
+      this.startedAt = 0
+      this.updatedAt = 0
+      this.lastTextUpdate = 0
+      this.animationTimestamp = null
     }
     shouldComponentUpdate = (nextProps, nextState) => {
-        if (nextState.isStopped) {
+        if (!this.state.isStopped && nextState.isStopped) {
             this.stop()
         } else if (this.animationTimestamp && nextState.isPaused) {
             this.pause()
@@ -57,9 +60,9 @@ class SuchCountdown extends Component {
                 this.state.radius,
             )
         }
-        this.animationTimestamp = null
-        this.startedAt = null
-        this.updatedAt = null
+
+        this.resetInternalCounters()
+        setTimeout(this.props.onCountdownEnd, 0)
     }
     pause = () => {
         if (this.animationTimestamp) {
@@ -208,6 +211,7 @@ SuchCountdown.propTypes = {
   duration: PropTypes.number,
   getTimeText: PropTypes.func,
   getFontSize: PropTypes.func,
+  onCountdownEnd: PropTypes.func,
 }
 
 SuchCountdown.defaultProps = {
@@ -219,6 +223,7 @@ SuchCountdown.defaultProps = {
     getTimeText: getTimeText,
     getFontSize: sideLength => `${(sideLength / 5).toFixed(2)}px`,
     fontName: 'sans-serif',
+    onCountdownEnd: () => null,
 }
 
 function shouldUpdateText(remainingMillis, duration, tickInterval, timeSinceLastUpdate) {

@@ -75,6 +75,12 @@ class Example extends Component {
           isStopped: true,
       })
   }
+  onCountdownEnd = () => {
+    this.setState({
+        isPaused: false,
+        isStopped: true,
+    })
+  }
   onTickIntervalChange = (ev) => {
       this.setState({
           tickInterval: parseInt(ev.currentTarget.value || "1", 10),
@@ -139,6 +145,7 @@ class Example extends Component {
                     duration={this.state.duration}
                     isPaused={this.state.isPaused}
                     isStopped={this.state.isStopped}
+                    onCountdownEnd={this.onCountdownEnd}
                   />
               </Square>
           </div>
