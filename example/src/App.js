@@ -51,8 +51,8 @@ class Example extends Component {
       this.state = {
           isPaused: false,
           isStopped: false,
-          tickInterval: 1000,
-          duration: 70000,
+          tickInterval: 100,
+          duration: 15000,
       }
   }
   onPauseClick = (ev) => {
