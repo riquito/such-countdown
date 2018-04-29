@@ -21,7 +21,7 @@ class SuchCountdown extends Component {
     resetInternalCounters = () => {
       this.startedAt = 0
       this.updatedAt = 0
-      this.lastTextUpdate = 0
+      this.textUpdatedAt = 0
       this.animationTimestamp = null
     }
     shouldComponentUpdate = (nextProps, nextState) => {
@@ -138,7 +138,7 @@ class SuchCountdown extends Component {
         this.prevRemainingMillis = this.props.duration - prevUpdatedAt + this.startedAt
 
         if (shouldUpdateText(remainingMillis, this.props.duration, this.props.tickInterval, this.updatedAt - this.lastTextUpdate)) {
-          this.lastTextUpdate = this.updatedAt
+          this.textUpdatedAt = this.updatedAt
           const text = this.props.getTimeText(Math.max(0, remainingMillis), this.props.duration, this.props.tickInterval)
 
           // XXX the text could be the result of a propped function
