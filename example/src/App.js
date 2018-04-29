@@ -77,7 +77,7 @@ class Example extends Component {
   }
   onTickIntervalChange = (ev) => {
       this.setState({
-          tickInterval: parseInt(ev.currentTarget.value, 10),
+          tickInterval: parseInt(ev.currentTarget.value || "1", 10),
       })
   }
   onDurationChange = (ev) => {
@@ -120,13 +120,13 @@ class Example extends Component {
                 <input
                   className="interval-input"
                   type="range"
-                  min="1"
+                  min="0"
                   max="1000"
                   step="100"
                   defaultValue={this.state.tickInterval}
                   onChange={this.onTickIntervalChange}
                 />
-                <span className="interval-value">{this.state.tickInterval} ms</span>
+                <span className="interval-value">{this.state.tickInterval || 1} ms</span>
               </IntervalFieldBox>
               <DurationBox>
               <label className="duration-label">Timer duration</label>
