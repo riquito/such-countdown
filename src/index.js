@@ -108,18 +108,26 @@ class SuchCountdown extends Component {
     }
     updateCanvas = () => {
         const now = performance.now()
-        const startDegree = this.props.startDegree + 270
 
         if (now - this.updatedAt < this.props.tickInterval) {
            this.animationTimestamp = requestAnimationFrame(this.updateCanvas)
            return
         }
 
+        const remainingMillis = this.props.duration - this.updatedAt + this.startedAt
+        // XXX shouldUpdateText should be a prop
+        const updateText = shouldUpdateText(
+          remainingMillis,
+          this.props.duration,
+          this.props.tickInterval,
+          this.updatedAt - this.textUpdatedAt
+        )
+
         const prevUpdatedAt = this.updatedAt
         this.updatedAt = now
 
-        const remainingMillis = this.props.duration - this.updatedAt + this.startedAt
         const timePassedAspercent = 100 - (remainingMillis * 100 / this.props.duration)
+        const startDegree = this.props.startDegree + 270
         const endDegree = startDegree + timePassedAspercent * 360 / 100
 
         drawCircleBackground(
@@ -135,9 +143,7 @@ class SuchCountdown extends Component {
             endDegree,
         )
 
-        this.prevRemainingMillis = this.props.duration - prevUpdatedAt + this.startedAt
-
-        if (shouldUpdateText(remainingMillis, this.props.duration, this.props.tickInterval, this.updatedAt - this.lastTextUpdate)) {
+        if (updateText) {
           this.textUpdatedAt = this.updatedAt
           const text = this.props.getTimeText(Math.max(0, remainingMillis), this.props.duration, this.props.tickInterval)
 
