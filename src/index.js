@@ -15,7 +15,6 @@ class SuchCountdown extends Component {
 
         this.state = {
             status: props.status,
-            fontSize: props.getFontSize(props.sideLength)
             width: 100,
             height: 100,
         }
@@ -133,48 +132,22 @@ class SuchCountdown extends Component {
            return
         }
 
-        // XXX shouldUpdateText should be a prop
-        const updateText = shouldUpdateText(
-          remainingMillis,
-          this.props.duration,
-          this.props.tickInterval,
-          this.updatedAt - this.textUpdatedAt
-        )
-
         const prevUpdatedAt = this.updatedAt
         this.updatedAt = now
 
-        const timePassedAspercent = 100 - (remainingMillis * 100 / this.props.duration)
-        const startDegree = this.props.startDegree + 270
-        const endDegree = startDegree + timePassedAspercent * 360 / 100
+        this.elem.draw({
+          remainingMillis,
+          duration,
+          updatedAt: this.updatedAt,
+          tickInterval,
+          animationTimestamp: this.animationTimestamp,
+          startedAt: this.startedAt,
+          prevUpdatedAt,
+          timeAlreadySpentPlaying,
+          status: this.state.status,
+        })
 
-        drawCircleBackground(
-            this.canvasContext,
-            this.state.sideLength,
-            this.state.radius,
-        )
-        drawProgressiveCircle(
-            this.canvasContext,
-            this.state.sideLength,
-            this.state.radius,
-            startDegree,
-            endDegree,
-        )
-
-        if (updateText) {
-          this.textUpdatedAt = this.updatedAt
-          const text = this.props.getTimeText(Math.max(0, remainingMillis), this.props.duration, this.props.tickInterval)
-
-          // XXX the text could be the result of a propped function
-          drawTextInCircle(
-            this.textCanvasContext,
-            this.state.sideLength,
-            text,
-            `${this.state.fontSize} ${this.props.fontName}`
-          )
-        }
-
-        if (this.updatedAt - this.startedAt < this.props.duration) {
+        if (this.updatedAt - this.startedAt < duration) {
             this.animationTimestamp = requestAnimationFrame(this.tick)
         } else {
             this.stop({reset: true})
@@ -183,57 +156,35 @@ class SuchCountdown extends Component {
     setElement = (elem) => {
         this.elem = elem
     }
-    setTextCanvas = (elem) => {
-        this.textCanvas = elem
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (prevState.status !== STATUS_STOP && this.state.status === STATUS_STOP) {
+            this.stop()
+        } else if (this.animationTimestamp && this.state.status === STATUS_PAUSE) {
+            this.pause()
+        } else if (!this.animationTimestamp && this.state.status === STATUS_PLAY) {
+            this.start()
+        }
+
     }
     render() {
-        return (
-            <div
-                className={this.props.className}
-                style={{
-                    width: `${this.state.sideLength}px`,
-                    height: `${this.state.sideLength}px`,
-                    position: 'relative',
-                }}
-            >
-                <canvas
-                    width={this.state.sideLength * window.devicePixelRatio}
-                    height={this.state.sideLength * window.devicePixelRatio}
-                    style={{
-                        width: `${this.state.sideLength}px`,
-                        height: `${this.state.sideLength}px`,
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        zIndex: 0,
-                    }}
-                    ref={this.setElement}
-                />
-                <canvas
-                    width={this.state.sideLength * window.devicePixelRatio}
-                    height={this.state.sideLength * window.devicePixelRatio}
-                    style={{
-                        width: `${this.state.sideLength}px`,
-                        height: `${this.state.sideLength}px`,
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        zIndex: 1,
-                    }}
-                    ref={this.setTextCanvas}
-                />
-            </div>
-        )
+      const { className } = this.props
+
+      return (
+        <CircleCountdown
+          className={className}
+          ref={this.setElement}
+          width={this.state.width}
+          height={this.state.height}
+          status={this.state.status}
+        />
+      )
     }
 }
 
 SuchCountdown.propTypes = {
   className: PropTypes.string,
   tickInterval: PropTypes.number,
-  sideLength: PropTypes.number,
   duration: PropTypes.number,
-  getTimeText: PropTypes.func,
-  getFontSize: PropTypes.func,
   onCountdownEnd: PropTypes.func,
   status: PropTypes.oneOf([STATUS_PAUSE, STATUS_PLAY, STATUS_STOP]),
 }
@@ -241,14 +192,181 @@ SuchCountdown.propTypes = {
 SuchCountdown.defaultProps = {
     tickInterval: 1000,
     className: '',
-    sideLength: 200,
     duration: 10000,
+    onCountdownEnd: () => null,
     status: STATUS_PLAY,
+}
+
+class CircleCountdown extends Component {
+  constructor(props) {
+      super()
+      this.resetInternalCounters()
+      this.state = {}
+  }
+  resetInternalCounters = () => {
+    this.textUpdatedAt = 0
+  }
+  static getDerivedStateFromProps(nextProps, prevState) {
+    const nextState = {}
+    const nextSideLength = Math.min(nextProps.width, nextProps.height)
+
+    if (nextSideLength !== prevState.sideLength) {
+      nextState.sideLength = nextSideLength
+      nextState.radius = nextSideLength / 2 * 0.9
+    }
+
+    nextState.fontSize = nextProps.getFontSize(nextSideLength)
+
+    return nextState
+  }
+  shouldComponentUpdate = (nextProps, nextState) => {
+      return (nextProps.width !== this.props.width)
+        || (nextProps.height !== this.props.height)
+        || (nextProps.className !== this.props.className)
+  }
+  setCircleCanvas = (elem) => {
+    this.circleCanvas = elem
+  }
+  setTextCanvas = (elem) => {
+    this.textCanvas = elem
+  }
+  componentDidMount() {
+      this.circleContext = this.circleCanvas.getContext('2d')
+      this.circleContext.scale(window.devicePixelRatio, window.devicePixelRatio)
+
+      this.textCanvasContext = this.textCanvas.getContext('2d')
+      this.textCanvasContext.textBaseline  = 'middle'
+      this.textCanvasContext.textAlign = 'center'
+      this.textCanvasContext.scale(window.devicePixelRatio, window.devicePixelRatio)
+  }
+  draw({
+    remainingMillis,
+    duration,
+    updatedAt,
+    tickInterval,
+    animationTimestamp,
+    startedAt,
+    prevUpdatedAt,
+    timeAlreadySpentPlaying,
+    status,
+  }) {
+    const timePassedAspercent = 100 - (remainingMillis * 100 / duration)
+    const startDegree = this.props.startDegree + 270
+    const endDegree = startDegree + timePassedAspercent * 360 / 100
+    let text = null
+
+    if (shouldUpdateText(
+      remainingMillis,
+      duration,
+      tickInterval,
+      this.updatedAt - this.textUpdatedAt
+    )) {
+      text = getTimeText(Math.max(0, remainingMillis), duration, tickInterval)
+    }
+    this.drawFrame(startDegree, endDegree, text, status)
+  }
+  drawReset({
+    remainingMillis,
+    duration,
+    tickInterval,
+    status,
+  }) {
+    const timePassedAspercent = 100 - (remainingMillis * 100 / duration)
+    const startDegree = this.props.startDegree + 270
+    const endDegree = startDegree + timePassedAspercent * 360 / 100
+    const text = getTimeText(Math.max(0, remainingMillis), duration, tickInterval)
+
+    this.drawFrame(startDegree, endDegree, text, status)
+  }
+  drawFrame(
+    startDegree,
+    endDegree,
+    text,
+    status,
+  ) {
+    drawCircleBackground(
+      this.circleContext,
+      this.state.sideLength,
+      this.state.radius,
+      status === STATUS_PLAY
+      ? 'purple'
+      : '#b1b1b1'
+    )
+
+    Math.abs(startDegree - endDegree) > 1 && drawProgressiveCircle(
+        this.circleContext,
+        this.state.sideLength,
+        this.state.radius,
+        startDegree,
+        endDegree,
+    )
+
+    text !== null && drawTextInCircle(
+      this.textCanvasContext,
+      this.state.sideLength,
+      text,
+      `${this.state.fontSize} ${this.props.fontName}`
+    )
+  }
+  render() {
+    console.log('render CircleCountdown')
+    return (
+        <div
+            className={this.props.className}
+            style={{
+                width: `${this.state.sideLength}px`,
+                height: `${this.state.sideLength}px`,
+                position: 'relative',
+            }}
+        >
+            <canvas
+                width={this.state.sideLength * window.devicePixelRatio}
+                height={this.state.sideLength * window.devicePixelRatio}
+                style={{
+                    width: `${this.state.sideLength}px`,
+                    height: `${this.state.sideLength}px`,
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    zIndex: 0,
+                }}
+                ref={this.setCircleCanvas}
+            />
+            <canvas
+                width={this.state.sideLength * window.devicePixelRatio}
+                height={this.state.sideLength * window.devicePixelRatio}
+                style={{
+                    width: `${this.state.sideLength}px`,
+                    height: `${this.state.sideLength}px`,
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    zIndex: 1,
+                }}
+                ref={this.setTextCanvas}
+            />
+        </div>
+    )
+  }
+}
+
+CircleCountdown.propTypes = {
+  width: PropTypes.number.isRequired,
+  height: PropTypes.number.isRequired,
+  className: PropTypes.string,
+  startDegree: PropTypes.number,
+  getTimeText: PropTypes.func,
+  getFontSize: PropTypes.func,
+}
+
+CircleCountdown.defaultProps = {
+    className: '',
+    width: 200,
+    height: 200,
     startDegree: 0,
     getTimeText: getTimeText,
     getFontSize: sideLength => `${(sideLength / 5).toFixed(2)}px`,
     fontName: 'sans-serif',
-    onCountdownEnd: () => null,
 }
 
 function shouldUpdateText(remainingMillis, duration, tickInterval, timeSinceLastUpdate) {
@@ -291,7 +409,7 @@ function getTimeText(remainingMillis, duration, tickInterval) {
   }
 }
 
-function drawCircleBackground(c, sideLength, radius) {
+function drawCircleBackground(c, sideLength, radius, strokeColor) {
     const halfSide = sideLength / 2
     const PI = 245850922/78256779
 
@@ -299,7 +417,7 @@ function drawCircleBackground(c, sideLength, radius) {
 
     c.beginPath();
     c.arc(halfSide, halfSide, radius, 0, 2 * PI);
-    c.strokeStyle = '#b1b1b1';
+    c.strokeStyle = strokeColor;
     c.lineWidth = radius / 10;
     c.stroke();
 }
