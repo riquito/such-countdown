@@ -27,6 +27,8 @@ class SuchCountdown extends Component {
       this.updatedAt = 0
       this.textUpdatedAt = 0
       this.animationTimestamp = null
+      this.timeAlreadyPassedWhenPaused = 0
+      this.timePassedInTheLatestIntervalBeforePausing = 0
     }
     shouldComponentUpdate = (nextProps, nextState) => {
         if (nextState.status !== STATUS_STOP && this.state.status === STATUS_STOP) {
@@ -71,11 +73,15 @@ class SuchCountdown extends Component {
             cancelAnimationFrame(this.animationTimestamp)
         }
         this.animationTimestamp = null
+        this.timeAlreadyPassedWhenPaused = this.updatedAt - this.startedAt
+        this.timePassedInTheLatestIntervalBeforePausing = performance.now() - this.updatedAt
     }
     start = () => {
-        this.startedAt = performance.now() - this.updatedAt + this.startedAt
-        this.updatedAt = this.startedAt
-        this.animationTimestamp = requestAnimationFrame(this.updateCanvas)
+        const now = performance.now()
+        const timeAlreadySpentPlaying = this.updatedAt - this.startedAt
+        this.startedAt = now - timeAlreadySpentPlaying - this.timePassedInTheLatestIntervalBeforePausing
+        this.updatedAt = now - this.timePassedInTheLatestIntervalBeforePausing
+        this.updateCanvas(now, this.timePassedInTheLatestIntervalBeforePausing === 0)
     }
     componentDidMount() {
         this.canvasContext = this.elem.getContext('2d')
@@ -103,10 +109,14 @@ class SuchCountdown extends Component {
     onResize = () => {
         this.setState(this.getDimensions())
     }
-    updateCanvas = () => {
+    updateCanvas = (timestamp, force) => {
         const now = performance.now()
+        const {
+          duration,
+          tickInterval,
+        } = this.props
 
-        if (now - this.updatedAt < this.props.tickInterval) {
+        if (now - this.updatedAt < tickInterval && !force) {
            this.animationTimestamp = requestAnimationFrame(this.updateCanvas)
            return
         }
