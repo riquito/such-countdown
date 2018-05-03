@@ -116,12 +116,14 @@ class SuchCountdown extends Component {
           tickInterval,
         } = this.props
 
-        if (now - this.updatedAt < tickInterval && !force) {
+        const timeAlreadySpentPlaying = now - this.startedAt
+        const remainingMillis = duration - timeAlreadySpentPlaying
+
+        if (now - this.updatedAt < tickInterval && remainingMillis > 0 && !force) {
            this.animationTimestamp = requestAnimationFrame(this.updateCanvas)
            return
         }
 
-        const remainingMillis = this.props.duration - this.updatedAt + this.startedAt
         // XXX shouldUpdateText should be a prop
         const updateText = shouldUpdateText(
           remainingMillis,
