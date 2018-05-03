@@ -25,91 +25,100 @@ class SuchCountdown extends Component {
     resetInternalCounters = () => {
       this.startedAt = 0
       this.updatedAt = 0
-      this.textUpdatedAt = 0
       this.animationTimestamp = null
       this.timeAlreadyPassedWhenPaused = 0
       this.timePassedInTheLatestIntervalBeforePausing = 0
     }
     shouldComponentUpdate = (nextProps, nextState) => {
-        if (nextState.status !== STATUS_STOP && this.state.status === STATUS_STOP) {
-            this.stop()
-        } else if (this.animationTimestamp && nextState.status === STATUS_PAUSE) {
-            this.pause()
-        } else if (!this.animationTimestamp && nextState.status === STATUS_PLAY) {
-            this.start()
-        }
+        console.log('sCU?',(nextState.width !== this.state.width)
+        || (nextState.height !== this.state.height)
+        || (nextProps.className !== this.props.className)
+        || (nextState.status !== this.state.status))
 
         return (nextState.width !== this.state.width)
           || (nextState.height !== this.state.height)
+          || (nextProps.className !== this.props.className)
+          || (nextState.status !== this.state.status)
     }
     static getDerivedStateFromProps(nextProps, prevState) {
+      console.log("get derived state from props (old follows)",nextProps, prevState)
         const stateDiff = {
         }
         if (nextProps.status !== prevState.status) {
             stateDiff.status = nextProps.status
         }
+
+        console.log('derived new state', stateDiff)
         return stateDiff
     }
     componentWillUnmount = (ev) => {
         window.removeEventListener('resize', this.onResize)
     }
     stop = ({reset} = {reset:true}) => {
-        if (this.animationTimestamp) {
-            cancelAnimationFrame(this.animationTimestamp)
+        if (!this.animationTimestamp) {
+          // i.e. we stopped while playing (we wouldn't enter here from pause)
+          cancelAnimationFrame(this.animationTimestamp)
         }
-        if (reset) {
-            drawCircleBackground(
-                this.canvasContext,
-                this.state.sideLength,
-                this.state.radius,
-            )
-        }
+        console.log('stop', this.animationTimestamp)
 
         this.resetInternalCounters()
-        setTimeout(this.props.onCountdownEnd, 0)
+        this.setState({
+          status: STATUS_STOP,
+        }, () => {
+          if (reset) {
+            this.drawReset()
+          }
+
+          setTimeout(this.props.onCountdownEnd, 0)
+        })
     }
     pause = () => {
         if (this.animationTimestamp) {
             cancelAnimationFrame(this.animationTimestamp)
         }
         this.animationTimestamp = null
+        //this.updatedAt = performance.now()
         this.timeAlreadyPassedWhenPaused = this.updatedAt - this.startedAt
         this.timePassedInTheLatestIntervalBeforePausing = performance.now() - this.updatedAt
     }
     start = () => {
+      console.log('start')
         const now = performance.now()
         const timeAlreadySpentPlaying = this.updatedAt - this.startedAt
         this.startedAt = now - timeAlreadySpentPlaying - this.timePassedInTheLatestIntervalBeforePausing
         this.updatedAt = now - this.timePassedInTheLatestIntervalBeforePausing
-        this.updateCanvas(now, this.timePassedInTheLatestIntervalBeforePausing === 0)
+        console.log('started at', this.startedAt, 'paused at', this.updatedAt, 'time in tick', this.timePassedInTheLatestIntervalBeforePausing)
+        this.tick(now, this.timePassedInTheLatestIntervalBeforePausing === 0)
     }
     componentDidMount() {
-        this.canvasContext = this.elem.getContext('2d')
-        this.canvasContext.scale(window.devicePixelRatio, window.devicePixelRatio)
-
-        this.textCanvasContext = this.textCanvas.getContext('2d')
-        this.textCanvasContext.textBaseline  = 'middle'
-        this.textCanvasContext.textAlign = 'center'
-        this.textCanvasContext.scale(window.devicePixelRatio, window.devicePixelRatio)
-
-        const dim = this.getDimensions()
-        drawCircleBackground(this.canvasContext, Math.min(dim.width, dim.height), dim.radius)
-        this.setState(dim)
-
         // XXX should use a throttled version, see
         // https://developer.mozilla.org/en-US/docs/Web/Events/resize
         window.addEventListener("resize", this.onResize);
+
+        this.drawReset()
+        if (this.props.status === STATUS_PLAY) {
+          this.start()
+        }
     }
     getDimensions = () => ({
         width: this.elem.clientWidth,
         height: this.elem.clientHeight,
     })
-    }
+    drawReset() {
+      const timeSinceLastUpdate = this.updatedAt - this.startedAt
+      const remainingMillis = this.props.duration - timeSinceLastUpdate
 
+      this.elem.drawReset({
+        duration: this.props.duration,
+        remainingMillis: this.props.duration - timeSinceLastUpdate,
+        tickInterval: this.props.tickInterval,
+        status: this.state.status,
+      })
+    }
     onResize = () => {
         this.setState(this.getDimensions())
     }
-    updateCanvas = (timestamp, force) => {
+    tick = (timestamp, force) => {
         const now = performance.now()
         const {
           duration,
@@ -120,7 +129,7 @@ class SuchCountdown extends Component {
         const remainingMillis = duration - timeAlreadySpentPlaying
 
         if (now - this.updatedAt < tickInterval && remainingMillis > 0 && !force) {
-           this.animationTimestamp = requestAnimationFrame(this.updateCanvas)
+           this.animationTimestamp = requestAnimationFrame(this.tick)
            return
         }
 
@@ -166,7 +175,7 @@ class SuchCountdown extends Component {
         }
 
         if (this.updatedAt - this.startedAt < this.props.duration) {
-            this.animationTimestamp = requestAnimationFrame(this.updateCanvas)
+            this.animationTimestamp = requestAnimationFrame(this.tick)
         } else {
             this.stop({reset: true})
         }
