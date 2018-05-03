@@ -1,7 +1,8 @@
 import React, { Component } from 'react'
 import styled from 'styled-components'
 
-import SuchCountdown, {
+import {
+  SuchCountdown,
   STATUS_PAUSE,
   STATUS_PLAY,
   STATUS_STOP,

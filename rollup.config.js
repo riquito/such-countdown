@@ -18,6 +18,7 @@ export default {
       format: 'es'
     }
   ],
+  exports: 'named',
   plugins: [
     external(),
     url(),
