@@ -15,8 +15,9 @@ class SuchCountdown extends Component {
 
         this.state = {
             status: props.status,
-            sideLength: props.sideLength,
             fontSize: props.getFontSize(props.sideLength)
+            width: 100,
+            height: 100,
         }
 
         this.resetInternalCounters()
@@ -36,7 +37,8 @@ class SuchCountdown extends Component {
             this.start()
         }
 
-        return nextState.sideLength !== this.state.sideLength
+        return (nextState.width !== this.state.width)
+          || (nextState.height !== this.state.height)
     }
     static getDerivedStateFromProps(nextProps, prevState) {
         const stateDiff = {
@@ -85,22 +87,17 @@ class SuchCountdown extends Component {
         this.textCanvasContext.scale(window.devicePixelRatio, window.devicePixelRatio)
 
         const dim = this.getDimensions()
-        drawCircleBackground(this.canvasContext, dim.sideLength, dim.radius)
+        drawCircleBackground(this.canvasContext, Math.min(dim.width, dim.height), dim.radius)
         this.setState(dim)
 
         // XXX should use a throttled version, see
         // https://developer.mozilla.org/en-US/docs/Web/Events/resize
         window.addEventListener("resize", this.onResize);
     }
-    getDimensions = () => {
-        const width = this.elem.clientWidth
-        const height = this.elem.clientHeight
-        const sideLength = Math.min(width, height)
-
-        return {
-            sideLength,
-            radius: sideLength / 2 * 0.9
-        }
+    getDimensions = () => ({
+        width: this.elem.clientWidth,
+        height: this.elem.clientHeight,
+    })
     }
 
     onResize = () => {
