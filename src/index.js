@@ -401,9 +401,9 @@ function drawTextInCircle(c, sideLength, text, font) {
  */
 function getTimeText(remainingMillis, duration, tickInterval) {
   if (remainingMillis / 60000 > 1) {
-    return `${Math.ceil(remainingMillis / 60000)} M`
+    return `${Math.round(remainingMillis / 60000)} M`
   } else if (remainingMillis > 10000) {
-    return `${Math.ceil(remainingMillis / 1000)} S`
+    return `${Math.round(remainingMillis / 1000)} S`
   } else {
     return `${(remainingMillis / 1000).toFixed(tickInterval >= 1000 ? 0 : 2)} S`
   }
