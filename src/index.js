@@ -5,13 +5,16 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 
+export const STATUS_PLAY = 'play'
+export const STATUS_STOP = 'stop'
+export const STATUS_PAUSE = 'pause'
+
 class SuchCountdown extends Component {
     constructor(props) {
         super()
 
         this.state = {
-            isPaused: props.isPaused,
-            isStopped: props.isStopped,
+            status: props.status,
             sideLength: props.sideLength,
             fontSize: props.getFontSize(props.sideLength)
         }
@@ -25,11 +28,11 @@ class SuchCountdown extends Component {
       this.animationTimestamp = null
     }
     shouldComponentUpdate = (nextProps, nextState) => {
-        if (!this.state.isStopped && nextState.isStopped) {
+        if (nextState.status !== STATUS_STOP && this.state.status === STATUS_STOP) {
             this.stop()
-        } else if (this.animationTimestamp && nextState.isPaused) {
+        } else if (this.animationTimestamp && nextState.status === STATUS_PAUSE) {
             this.pause()
-        } else if (!this.animationTimestamp && !nextState.isPaused && !nextState.isStopped) {
+        } else if (!this.animationTimestamp && nextState.status === STATUS_PLAY) {
             this.start()
         }
 
@@ -38,11 +41,8 @@ class SuchCountdown extends Component {
     static getDerivedStateFromProps(nextProps, prevState) {
         const stateDiff = {
         }
-        if (nextProps.isPaused !== prevState.isPaused) {
-            stateDiff.isPaused = nextProps.isPaused
-        }
-        if (nextProps.isStopped !== prevState.isStopped) {
-            stateDiff.isStopped = nextProps.isStopped
+        if (nextProps.status !== prevState.status) {
+            stateDiff.status = nextProps.status
         }
         return stateDiff
     }
@@ -160,7 +160,6 @@ class SuchCountdown extends Component {
             this.animationTimestamp = requestAnimationFrame(this.updateCanvas)
         } else {
             this.stop({reset: true})
-            this.setState({isStopped: true})
         }
     }
     setElement = (elem) => {
@@ -218,6 +217,7 @@ SuchCountdown.propTypes = {
   getTimeText: PropTypes.func,
   getFontSize: PropTypes.func,
   onCountdownEnd: PropTypes.func,
+  status: PropTypes.oneOf([STATUS_PAUSE, STATUS_PLAY, STATUS_STOP]),
 }
 
 SuchCountdown.defaultProps = {
@@ -225,6 +225,7 @@ SuchCountdown.defaultProps = {
     className: '',
     sideLength: 200,
     duration: 10000,
+    status: STATUS_PLAY,
     startDegree: 0,
     getTimeText: getTimeText,
     getFontSize: sideLength => `${(sideLength / 5).toFixed(2)}px`,

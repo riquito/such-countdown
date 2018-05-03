@@ -1,7 +1,11 @@
 import React, { Component } from 'react'
 import styled from 'styled-components'
 
-import SuchCountdown from 'such-countdown'
+import SuchCountdown, {
+  STATUS_PAUSE,
+  STATUS_PLAY,
+  STATUS_STOP,
+} from 'such-countdown'
 
 const Square = styled.div`
     width: ${props => props.sideLength};
@@ -49,8 +53,7 @@ class Example extends Component {
   constructor(props) {
       super()
       this.state = {
-          isPaused: false,
-          isStopped: false,
+          status: STATUS_STOP,
           tickInterval: 100,
           duration: 15000,
       }
@@ -58,27 +61,24 @@ class Example extends Component {
   onPauseClick = (ev) => {
       ev.preventDefault()
       this.setState({
-          isPaused: true,
+          status: STATUS_PAUSE,
       })
   }
   onStartClick = (ev) => {
       ev.preventDefault()
       this.setState({
-          isPaused: false,
-          isStopped: false,
+          status: STATUS_PLAY,
       })
   }
   onStopClick = (ev) => {
       ev.preventDefault()
       this.setState({
-          isPaused: false,
-          isStopped: true,
+          status: STATUS_STOP,
       })
   }
   onCountdownEnd = () => {
     this.setState({
-        isPaused: false,
-        isStopped: true,
+        status: STATUS_STOP,
     })
   }
   onTickIntervalChange = (ev) => {
@@ -102,21 +102,21 @@ class Example extends Component {
                 <button
                   className="btn-stop"
                   onClick={this.onStopClick}
-                  disabled={this.state.isStopped}
+                  disabled={this.state.status === STATUS_STOP}
                 >
                   stop ◼
                 </button>
                 <button
                   className="btn-pause"
                   onClick={this.onPauseClick}
-                  disabled={this.state.isStopped || this.state.isPaused}
+                  disabled={this.state.status === STATUS_PAUSE || this.state.status === STATUS_STOP}
                 >
                   pause ▮▮
                 </button>
                 <button
                   className="btn-play"
                   onClick={this.onStartClick}
-                  disabled={!this.state.isStopped && !this.state.isPaused}
+                  disabled={this.state.status === STATUS_PLAY}
                 >
                   play ▶
                 </button>
@@ -143,8 +143,7 @@ class Example extends Component {
                     tickInterval={this.state.tickInterval}
                     startDegree={0}
                     duration={this.state.duration}
-                    isPaused={this.state.isPaused}
-                    isStopped={this.state.isStopped}
+                    status={this.state.status}
                     onCountdownEnd={this.onCountdownEnd}
                   />
               </Square>
