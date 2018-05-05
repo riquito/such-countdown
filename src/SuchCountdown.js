@@ -89,7 +89,7 @@ class SuchCountdown extends Component {
   componentDidMount() {
     // XXX should use a throttled version, see
     // https://developer.mozilla.org/en-US/docs/Web/Events/resize
-    window.addEventListener('resize', this.onResize);
+    window.addEventListener('resize', this.onResize.bind(this));
 
     this.drawReset();
     if (this.props.status === STATUS_PLAY) {
@@ -97,8 +97,8 @@ class SuchCountdown extends Component {
     }
   }
   getDimensions = () => ({
-    width: this.elem.clientWidth,
-    height: this.elem.clientHeight
+    width: this.innerRef.clientWidth,
+    height: this.innerRef.clientHeight
   });
   drawReset() {
     const timeSinceLastUpdate = this.updatedAt - this.startedAt;
@@ -150,6 +150,9 @@ class SuchCountdown extends Component {
   setElement = elem => {
     this.elem = elem;
   };
+  setInnerRef = elem => {
+    this.innerRef = elem;
+  };
   componentDidUpdate(prevProps, prevState, snapshot) {
     if (prevState.status !== STATUS_STOP && this.state.status === STATUS_STOP) {
       this.stop();
@@ -166,6 +169,7 @@ class SuchCountdown extends Component {
       return React.cloneElement(child, {
         className,
         ref: this.setElement,
+        innerRef: this.setInnerRef,
         width: this.state.width,
         height: this.state.height,
         status: this.state.status

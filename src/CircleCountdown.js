@@ -121,6 +121,7 @@ class CircleCountdown extends Component {
   render() {
     return (
       <div
+        ref={this.props.innerRef}
         className={this.props.className}
         style={{
           width: `${this.state.sideLength}px`,
@@ -165,7 +166,8 @@ CircleCountdown.propTypes = {
   className: PropTypes.string,
   startDegree: PropTypes.number,
   getTimeText: PropTypes.func,
-  getFontSize: PropTypes.func
+  getFontSize: PropTypes.func,
+  innerRef: PropTypes.func
 };
 
 CircleCountdown.defaultProps = {
