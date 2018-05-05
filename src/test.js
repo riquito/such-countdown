@@ -1,7 +1,7 @@
-import SuchCountDown from './'
+import SuchCountDown from './';
 
 describe('SuchCountDown', () => {
   it('is truthy', () => {
-    expect(SuchCountDown).toBeTruthy()
-  })
-})
+    expect(SuchCountDown).toBeTruthy();
+  });
+});

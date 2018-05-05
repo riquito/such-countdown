@@ -9,6 +9,7 @@
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
   "scripts": {
+    "precommit": "lint-staged",
     "test": "cross-env CI=1 react-scripts test --env=jsdom",
     "test:watch": "react-scripts test --env=jsdom",
     "build": "rollup -c",
@@ -17,7 +18,11 @@
     "predeploy": "cd example && yarn install && yarn run build",
     "deploy": "gh-pages -d example/build"
   },
-  "dependencies": {},
+  "dependencies": {
+    "husky": "^0.14.3",
+    "lint-staged": "^7.0.5",
+    "prettier": "^1.12.1"
+  },
   "peerDependencies": {
     "prop-types": "^15.5.4",
     "react": "^16.3.0",
@@ -48,5 +53,11 @@
   },
   "files": [
     "dist"
-  ]
+  ],
+  "lint-staged": {
+     "src/**/*.{js,jsx,json,css}": [
+       "prettier --single-quote --write",
+       "git add"
+    ]
+  }
 }
