@@ -40,11 +40,13 @@ class CircleCountdown extends Component {
   }
   componentDidMount() {
     this.circleContext = this.circleCanvas.getContext('2d')
+    this.circleContext.lineCap = 'round';
     this.circleContext.scale(window.devicePixelRatio, window.devicePixelRatio)
 
     this.textCanvasContext = this.textCanvas.getContext('2d')
     this.textCanvasContext.textBaseline  = 'middle'
     this.textCanvasContext.textAlign = 'center'
+    this.textCanvasContext.fillStyle = '#000000'
     this.textCanvasContext.scale(window.devicePixelRatio, window.devicePixelRatio)
   }
   draw({
@@ -194,7 +196,6 @@ function drawTextInCircle(c, sideLength, text, font) {
 
     //c.clearRect( unit * 2, unit * 2, unit*2, unit*2);
     c.clearRect( unit * 2, unit * 3, unit*8, unit*6);
-    c.fillStyle = '#000000'
     c.font = font;
     c.fillText(text, halfSide, halfSide);
 }
@@ -221,8 +222,6 @@ function drawCircleBackground(c, sideLength, radius, strokeColor) {
     const halfSide = sideLength / 2
     const PI = 245850922/78256779
 
-    c.lineCap = 'round';
-
     c.beginPath();
     c.arc(halfSide, halfSide, radius, 0, 2 * PI);
     c.strokeStyle = strokeColor;
@@ -238,7 +237,6 @@ function drawProgressiveCircle(c, sideLength, radius, startDegree, endDegree) {
 
     c.beginPath();
     c.lineWidth = radius / 10;
-    c.lineCap = 'round';
 
     let color, nextColor, opacity
     const percent = Math.abs(endDegree - startDegree) / 360
