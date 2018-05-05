@@ -164,13 +164,16 @@ class SuchCountdown extends Component {
       const { className } = this.props
 
       return (
-        <CircleCountdown
-          className={className}
-          ref={this.setElement}
-          width={this.state.width}
-          height={this.state.height}
-          status={this.state.status}
-        />
+        React.Children.map(this.props.children,
+          (child) => {
+            return React.cloneElement(child, {
+                className,
+                ref: this.setElement,
+                width: this.state.width,
+                height: this.state.height,
+                status: this.state.status,
+            });
+          })
       )
     }
 }

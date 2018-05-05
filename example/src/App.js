@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import styled from 'styled-components'
 
 import {
+  CircleCountdown,
   SuchCountdown,
   STATUS_PAUSE,
   STATUS_PLAY,
@@ -146,7 +147,14 @@ class Example extends Component {
                     duration={this.state.duration}
                     status={this.state.status}
                     onCountdownEnd={this.onCountdownEnd}
-                  />
+                  >
+                    <CircleCountdown
+                      ref={this.setElement}
+                      width={this.state.width}
+                      height={this.state.height}
+                      status={this.state.status}
+                    />
+                  </SuchCountdown>
               </Square>
           </div>
       )
