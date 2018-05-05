@@ -36,6 +36,7 @@ const ButtonsBox = styled.div`
 
 const MainContainer = styled.div`
   padding: 0.5em;
+  width: 600px;
 `
 
 const DurationBox = styled.div`
@@ -50,6 +51,10 @@ const DurationBox = styled.div`
   }
 `
 
+const ExampleContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+`
 
 class Example extends Component {
   constructor(props) {
@@ -99,7 +104,7 @@ class Example extends Component {
   }
   render() {
       return (
-          <div>
+          <ExampleContainer>
               <ButtonsBox>
                 <button
                   className="btn-stop"
@@ -156,7 +161,7 @@ class Example extends Component {
                     />
                   </SuchCountdown>
               </Square>
-          </div>
+          </ExampleContainer>
       )
   }
 }
