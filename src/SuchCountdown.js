@@ -47,7 +47,7 @@ class SuchCountdown extends Component {
     window.removeEventListener('resize', this.onResize);
   };
   stop = ({ reset } = { reset: true }) => {
-    if (!this.animationTimestamp) {
+    if (this.animationTimestamp) {
       // i.e. we stopped while playing (we wouldn't enter here from pause)
       cancelAnimationFrame(this.animationTimestamp);
     }
