@@ -23,6 +23,10 @@ class CircleCountdown extends Component {
 
     nextState.fontSize = nextProps.getFontSize(nextSideLength);
 
+    if (nextProps.colorLineForeground !== prevState.colorLineForeground) {
+      nextState.colorLineForeground = nextProps.colorLineForeground;
+    }
+
     return nextState;
   }
   shouldComponentUpdate = (nextProps, nextState) => {
@@ -51,6 +55,28 @@ class CircleCountdown extends Component {
       window.devicePixelRatio,
       window.devicePixelRatio
     );
+
+    this.colors = [...this.state.colorLineForeground];
+  }
+  componentDidUpdate(prevProps, prevState) {
+    this.colors = [...this.state.colorLineForeground];
+  }
+  getColors(timePassedAspercent) {
+    timePassedAspercent = timePassedAspercent / 100;
+
+    while (
+      timePassedAspercent > this.colors[0][1] &&
+      timePassedAspercent <= 1
+    ) {
+      this.colors = this.colors.slice(1);
+    }
+
+    const colors = this.colors;
+    const nextColorAlpha =
+      (timePassedAspercent - colors[0][0]) / (colors[0][1] - colors[0][0]);
+    return colors[0][2] === colors[0][3]
+      ? [[colors[0][2], 1]]
+      : [[colors[0][2], 1 - nextColorAlpha], [colors[0][3], nextColorAlpha]];
   }
   draw({
     remainingMillis,
@@ -79,7 +105,7 @@ class CircleCountdown extends Component {
       text = getTimeText(Math.max(0, remainingMillis), duration, tickInterval);
     }
 
-    this.drawFrame(startDegree, endDegree, text, status);
+    this.drawFrame(startDegree, endDegree, text, status, timePassedAspercent);
   }
   drawReset({ remainingMillis, duration, tickInterval, status }) {
     const timePassedAspercent = 100 - remainingMillis * 100 / duration;
@@ -91,24 +117,34 @@ class CircleCountdown extends Component {
       tickInterval
     );
 
-    this.drawFrame(startDegree, endDegree, text, status);
+    this.drawFrame(startDegree, endDegree, text, status, timePassedAspercent);
   }
-  drawFrame(startDegree, endDegree, text, status) {
+  drawFrame(startDegree, endDegree, text, status, timePassedAspercent) {
     drawCircleBackground(
       this.circleContext,
       this.state.sideLength,
       this.state.radius,
-      status === STATUS_PLAY ? 'purple' : '#b1b1b1'
+      status === STATUS_PLAY
+        ? this.props.colorLineBackgroundActive
+        : this.props.colorLineBackgroundInactive
     );
 
-    Math.abs(startDegree - endDegree) > 1 &&
-      drawProgressiveCircle(
-        this.circleContext,
-        this.state.sideLength,
-        this.state.radius,
-        startDegree,
-        endDegree
-      );
+    if (timePassedAspercent > 1) {
+      for (let value of this.getColors(timePassedAspercent)) {
+        const color = value[0],
+          alpha = value[1];
+
+        drawProgressiveCircle(
+          this.circleContext,
+          this.state.sideLength,
+          this.state.radius,
+          startDegree,
+          endDegree,
+          color,
+          alpha
+        );
+      }
+    }
 
     text !== null &&
       drawTextInCircle(
@@ -160,6 +196,38 @@ class CircleCountdown extends Component {
   }
 }
 
+const ColorRowShape = function(
+  propValue,
+  key,
+  componentName,
+  location,
+  propFullName
+) {
+  const colorRow = propValue[key];
+  if (
+    colorRow.length !== 4 ||
+    typeof colorRow[0] !== 'number' ||
+    typeof colorRow[1] !== 'number' ||
+    typeof colorRow[2] !== 'string' ||
+    typeof colorRow[3] !== 'string' ||
+    isNaN(colorRow[0]) ||
+    isNaN(colorRow[1])
+  ) {
+    const wrongFormat =
+      colorRow.length !== 4
+        ? `array of lenth ${colorRow.length}`
+        : `[${[
+            isNaN(colorRow[0]) ? 'NaN' : typeof colorRow[0],
+            isNaN(colorRow[1]) ? 'NaN' : typeof colorRow[1],
+            typeof colorRow[2],
+            typeof colorRow[3]
+          ].join(', ')}]`;
+    throw Error(
+      `A color row should be of shape [number, number, string, string] (got ${wrongFormat} instead)`
+    );
+  }
+};
+
 CircleCountdown.propTypes = {
   width: PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,
@@ -167,7 +235,10 @@ CircleCountdown.propTypes = {
   startDegree: PropTypes.number,
   getTimeText: PropTypes.func,
   getFontSize: PropTypes.func,
-  innerRef: PropTypes.func
+  innerRef: PropTypes.func,
+  colorLineBackgroundInactive: PropTypes.string,
+  colorLineBackgroundActive: PropTypes.string,
+  colorLineForeground: PropTypes.arrayOf(ColorRowShape),
 };
 
 CircleCountdown.defaultProps = {
@@ -177,7 +248,15 @@ CircleCountdown.defaultProps = {
   startDegree: 0,
   getTimeText: getTimeText,
   getFontSize: sideLength => `${(sideLength / 5).toFixed(2)}px`,
-  fontName: 'sans-serif'
+  fontName: 'sans-serif',
+  colorLineBackgroundInactive: 'black',
+  colorLineBackgroundActive: 'gray',
+  colorLineForeground: [
+    [0, 0.25, 'blue', 'blue'],
+    [0.25, 0.5, 'blue', 'green'],
+    [0.5, 0.75, 'green', 'yellow'],
+    [0.75, 1, 'yellow', 'red']
+  ]
 };
 
 function shouldUpdateText(
@@ -241,7 +320,15 @@ function drawCircleBackground(c, sideLength, radius, strokeColor) {
   c.stroke();
 }
 
-function drawProgressiveCircle(c, sideLength, radius, startDegree, endDegree) {
+function drawProgressiveCircle(
+  c,
+  sideLength,
+  radius,
+  startDegree,
+  endDegree,
+  color,
+  alpha
+) {
   const halfSide = sideLength / 2;
   const PI = 245850922 / 78256779;
   const startRadians = startDegree * PI / 180;
@@ -249,31 +336,8 @@ function drawProgressiveCircle(c, sideLength, radius, startDegree, endDegree) {
 
   c.beginPath();
   c.lineWidth = radius / 10;
-
-  let color, nextColor, opacity;
-  const percent = Math.abs(endDegree - startDegree) / 360;
-  if (percent < 0.3) {
-    color = '#38C172';
-    nextColor = '#38C172';
-    opacity = percent / 0.3;
-  } else if (percent < 0.7) {
-    color = '#38C172';
-    nextColor = '#FFED4A';
-    opacity = (percent - 0.3) / (0.7 - 0.3);
-  } else {
-    color = '#FFED4A';
-    nextColor = '#E3342F';
-    opacity = (percent - 0.7) / (1 - 0.7);
-  }
-
-  c.globalAlpha = 1 - opacity;
+  c.globalAlpha = alpha;
   c.strokeStyle = color;
-  c.arc(halfSide, halfSide, radius, startRadians, endRadians);
-  c.stroke();
-
-  c.beginPath();
-  c.globalAlpha = opacity;
-  c.strokeStyle = nextColor;
   c.arc(halfSide, halfSide, radius, startRadians, endRadians);
   c.stroke();
   c.globalAlpha = 1;
