@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
-import { STATUS_PLAY } from './constants';
+import { STATUS_PLAY, STATUS_STOP, STATUS_PAUSE } from './constants';
 
 class CircleCountdown extends Component {
   constructor(props) {
@@ -33,7 +33,8 @@ class CircleCountdown extends Component {
     return (
       nextProps.width !== this.props.width ||
       nextProps.height !== this.props.height ||
-      nextProps.className !== this.props.className
+      nextProps.className !== this.props.className ||
+      nextProps.status !== this.props.status
     );
   };
   setCircleCanvas = elem => {
@@ -239,6 +240,7 @@ CircleCountdown.propTypes = {
   colorLineBackgroundInactive: PropTypes.string,
   colorLineBackgroundActive: PropTypes.string,
   colorLineForeground: PropTypes.arrayOf(ColorRowShape),
+  status: PropTypes.oneOf([STATUS_PAUSE, STATUS_PLAY, STATUS_STOP]).isRequired
 };
 
 CircleCountdown.defaultProps = {
