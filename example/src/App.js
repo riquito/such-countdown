@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { PureComponent } from 'react'
 import styled from 'styled-components'
 
 import {
@@ -56,7 +56,7 @@ const ExampleContainer = styled.div`
   flex-direction: column;
 `
 
-class Example extends Component {
+class Example extends PureComponent {
   constructor(props) {
       super()
       this.state = {
@@ -166,7 +166,7 @@ class Example extends Component {
   }
 }
 
-export default class App extends Component {
+export default class App extends PureComponent {
   render () {
     return (
       <MainContainer>
