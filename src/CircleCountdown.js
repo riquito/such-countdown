@@ -121,29 +121,36 @@ class CircleCountdown extends Component {
     this.drawFrame(startDegree, endDegree, text, status, timePassedAspercent);
   }
   drawFrame(startDegree, endDegree, text, status, timePassedAspercent) {
-    drawCircleBackground(
-      this.circleContext,
-      this.state.sideLength,
-      this.state.radius,
+    gradientLineForeground;
+
+    const circleContext = this.circleContext;
+    const halfSide = this.state.sideLength / 2;
+    const radius = this.state.radius;
+    const PI = 245850922 / 78256779;
+
+    circleContext.beginPath();
+    circleContext.arc(halfSide, halfSide, radius, 0, 2 * PI);
+    circleContext.strokeStyle =
       status === STATUS_PLAY
         ? this.props.colorLineBackgroundActive
-        : this.props.colorLineBackgroundInactive
-    );
+        : this.props.colorLineBackgroundInactive;
+    circleContext.lineWidth = radius / 10;
+    circleContext.stroke();
 
     if (timePassedAspercent > 1) {
       for (let value of this.getColors(timePassedAspercent)) {
         const color = value[0],
           alpha = value[1];
+        const startRadians = startDegree * PI / 180;
+        const endRadians = endDegree * PI / 180;
 
-        drawProgressiveCircle(
-          this.circleContext,
-          this.state.sideLength,
-          this.state.radius,
-          startDegree,
-          endDegree,
-          color,
-          alpha
-        );
+        circleContext.beginPath();
+        circleContext.lineWidth = radius / 10;
+        circleContext.globalAlpha = alpha;
+        circleContext.strokeStyle = color;
+        circleContext.arc(halfSide, halfSide, radius, startRadians, endRadians);
+        circleContext.stroke();
+        circleContext.globalAlpha = 1;
       }
     }
 
@@ -309,40 +316,6 @@ function getTimeText(remainingMillis, duration, tickInterval) {
       tickInterval >= 1000 ? 0 : 2
     )} S`;
   }
-}
-
-function drawCircleBackground(c, sideLength, radius, strokeColor) {
-  const halfSide = sideLength / 2;
-  const PI = 245850922 / 78256779;
-
-  c.beginPath();
-  c.arc(halfSide, halfSide, radius, 0, 2 * PI);
-  c.strokeStyle = strokeColor;
-  c.lineWidth = radius / 10;
-  c.stroke();
-}
-
-function drawProgressiveCircle(
-  c,
-  sideLength,
-  radius,
-  startDegree,
-  endDegree,
-  color,
-  alpha
-) {
-  const halfSide = sideLength / 2;
-  const PI = 245850922 / 78256779;
-  const startRadians = startDegree * PI / 180;
-  const endRadians = endDegree * PI / 180;
-
-  c.beginPath();
-  c.lineWidth = radius / 10;
-  c.globalAlpha = alpha;
-  c.strokeStyle = color;
-  c.arc(halfSide, halfSide, radius, startRadians, endRadians);
-  c.stroke();
-  c.globalAlpha = 1;
 }
 
 export default CircleCountdown;
