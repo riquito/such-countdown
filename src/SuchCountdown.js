@@ -46,25 +46,15 @@ class SuchCountdown extends Component {
   componentWillUnmount = ev => {
     window.removeEventListener('resize', this.onResize);
   };
-  stop = ({ reset } = { reset: true }) => {
+  stop = () => {
     if (this.animationTimestamp) {
       // i.e. we stopped while playing (we wouldn't enter here from pause)
       cancelAnimationFrame(this.animationTimestamp);
     }
 
     this.resetInternalCounters();
-    this.setState(
-      {
-        status: STATUS_STOP
-      },
-      () => {
-        if (reset) {
-          this.drawReset();
-        }
-
-        setTimeout(this.props.onCountdownEnd, 0);
-      }
-    );
+    this.drawReset();
+    setTimeout(this.props.onCountdownEnd, 0);
   };
   pause = () => {
     if (this.animationTimestamp) {
@@ -144,7 +134,7 @@ class SuchCountdown extends Component {
     if (this.updatedAt - this.startedAt < duration) {
       this.animationTimestamp = requestAnimationFrame(this.tick);
     } else {
-      this.stop({ reset: true });
+      this.setState({ status: STATUS_STOP });
     }
   };
   setElement = elem => {
