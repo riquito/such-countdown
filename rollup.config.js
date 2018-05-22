@@ -27,5 +27,10 @@ export default {
     }),
     resolve(),
     commonjs()
-  ]
+  ],
+  watch: {
+    chokidar: {
+      paths: 'src/**'
+    }
+  }
 }
