@@ -4,5 +4,8 @@
   },
   "globals": {
     "expect": true
+  },
+  "rules": {
+    "semi": ["error", "always"]
   }
 }
