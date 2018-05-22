@@ -90,7 +90,7 @@ class Example extends PureComponent {
   }
   onTickIntervalChange = (ev) => {
       this.setState({
-          tickInterval: parseInt(ev.currentTarget.value || "1", 10),
+          tickInterval: parseInt(ev.currentTarget.value, 10) || 1,
       })
   }
   onDurationChange = (ev) => {
